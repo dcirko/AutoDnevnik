@@ -31,7 +31,7 @@ Oznake slika fiksiraju verzijsku granu, ne točnu zakrpu. Točne lokalno provjer
 2. Iz korijena projekta kopirati konfiguracijski primjer, samo ako `.env` još ne postoji:
 
    ```powershell
-   Copy-Item .env.example .env
+   if (-not (Test-Path -LiteralPath .env)) { Copy-Item .env.example .env }
    ```
 
 3. U `.env` postaviti dvije različite lokalne lozinke za `DB_PASSWORD` i `MYSQL_ROOT_PASSWORD`. `.env` se ne verzionira. Naredba kopiranja ne smije prebrisati postojeću lokalnu konfiguraciju.

@@ -14,7 +14,7 @@ Faza 1: pripremljen prijedlog projekta i pokrenuto lokalno Docker okruženje. PH
 - [x] Pripremiti Docker konfiguraciju, README, .gitignore i .env.example; lokalne lozinke generirane su u ignorirani .env.
 - [x] Pokrenuti okruženje i provjeriti verzije, PHP ekstenzije, vezu na bazu i nedostupnost privatnih datoteka kroz Apache.
 - [x] Inicijalizirati lokalni Git i stvoriti javni repozitorij `dcirko/AutoDnevnik`.
-- [ ] Povezati lokalni origin i poslati početni commit na GitHub; provjeriti objavljene datoteke.
+- [x] Povezati lokalni origin i poslati početni commit na GitHub; objavljene datoteke i javna vidljivost provjereni u pregledniku.
 - [ ] Potvrditi prijavu/temu seminara i točne LMS rokove.
 - [x] Provjeriti i odabrati početni VIN servis: NHTSA vPIC; ograničena pokrivenost izvan američkog tržišta dokumentirana je i ručni unos ostaje dostupan.
 
@@ -84,7 +84,7 @@ Plan slijedi odjeljak 12 u `upute.txt`. Ovo su relativni tjedni semestra, ne pot
 - Proučiti korišteni i generirani kod kako bi korisnik mogao objasniti rješenje.
 
 ## Sljedeći konkretan korak
-Dovršiti prvi GitHub push, potvrditi temu/prijavu seminara i točne LMS rokove. Zatim prijeći na fazu 2: potvrditi detaljna polja i poslovna pravila, nacrtati ER i pripremiti shemu baze. Ne označavati cijelu fazu 1 dovršenom dok otvorene administrativne stavke nisu riješene.
+Tehnička priprema faze 1 je dovršena. Preostaje potvrditi temu/prijavu seminara i točne LMS rokove. Sljedeći razvojni korak je faza 2: potvrditi detaljna polja i poslovna pravila, nacrtati ER i pripremiti shemu baze. Cijelu fazu 1 ne označavati dovršenom dok otvorene administrativne stavke nisu riješene.
 
 ## Evidencija rada — faza 1, 2026-10-20
 - Pročitane projektne datoteke, izvorne tekstualne upute i korisnikova uputa `RTK.md`.
@@ -96,5 +96,6 @@ Dovršiti prvi GitHub push, potvrditi temu/prijavu seminara i točne LMS rokove.
 - HTTP `/`: 403, očekivano za prazan `public/` bez indexa; `/.env`: 403, `/docs/PROJECT.md`: 404 i `/.git/config`: 403. Konfiguracija/dokumentacija/Git nisu javno dostupni.
 - vPIC javni primjer s djelomičnim VIN-om: HTTP 200 / JSON, BMW X3, 2011, Gasoline, ErrorCode 6. Provjerena dostupnost i polja; aplikacijska integracija ostaje u fazi 6.
 - Git ignorira lokalni .env i izvorne nastavne materijale; vlastita dokumentacija i razvojna konfiguracija ulaze u repozitorij.
+- Početni commit `8b64c91` poslan je na `origin/main`; u pregledniku potvrđena javna vidljivost i popis vlastitih projektnih datoteka. .env i izvorni nastavni materijali nisu objavljeni.
 - AI pomoć: Codex za analizu, dokumentaciju, Docker konfiguraciju i provjere; opis dodan u README.
 - Preostaje od korisnika: potvrda teme individualnog seminara, status njegove prijave i točan LMS rok. Prijedlog teme nalazi se u `PROJECT.md`; nijedna prijava ili predaja nije poslana.
