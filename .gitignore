@@ -1,0 +1,27 @@
+# Local configuration and secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# Dependencies and generated files
+/vendor/
+/node_modules/
+/.tools/
+/tmp/
+/output/
+/storage/
+*.log
+.phpunit.cache/
+
+# Local editor/OS settings
+/.idea/
+/.vscode/
+.DS_Store
+Thumbs.db
+
+# Original course materials stay local; project documentation is versioned.
+/docs/upute.txt
+/docs/upute 2.txt
+/docs/Uvodno predavanje.pdf
