@@ -5,7 +5,7 @@ Popis je 2026-10-19 uspoređen s `docs/upute.txt` (detaljni zahtjevi, odjeljci 1
 ## Obavezni zahtjevi kolegija
 - [ ] Frontend aplikacije.
 - [ ] PHP backend.
-- [ ] Relacijska baza podataka.
+- [x] Početna relacijska baza podataka izrađena i provjerena u fazi 2; uporaba kroz poslovne funkcionalnosti slijedi.
 - [ ] CMS/admin sučelje.
 - [ ] Uloge: posjetitelj, korisnik, urednik i administrator.
 - [ ] Modul vijesti/obavijesti (automobilske vijesti i savjeti).
@@ -16,7 +16,7 @@ Popis je 2026-10-19 uspoređen s `docs/upute.txt` (detaljni zahtjevi, odjeljci 1
 - [ ] Autentifikacija i autorizacija.
 - [ ] Kontinuirani razvoj na GitHubu.
 - [ ] Završna dokumentacija.
-- [ ] ER dijagram usklađen s implementiranom bazom.
+- [x] Početni ER dijagram usklađen s primijenjenom shemom; održavati ga uz daljnje promjene.
 - [ ] API dokumentacija usklađena s implementiranim endpointima.
 - [ ] Testovi i evidentirani rezultati provjere.
 
@@ -25,6 +25,7 @@ Popis je 2026-10-19 uspoređen s `docs/upute.txt` (detaljni zahtjevi, odjeljci 1
 - [ ] Dodavanje, pregled, uređivanje i brisanje vlastitih vozila.
 - [ ] Evidencija servisa po vozilu.
 - [ ] Evidencija točenja goriva i kilometraže.
+- [ ] Evidencija električnih punjenja (kWh, datum, kilometraža i iznos); u prvoj verziji bez stanja baterije i procjene kWh/100 km.
 - [ ] Evidencija troškova po vozilu.
 - [ ] Podsjetnici za servis, registraciju, tehnički pregled i slične obaveze.
 - [ ] Dashboard sa statistikom troškova i potrošnje.
@@ -52,10 +53,12 @@ Popis je 2026-10-19 uspoređen s `docs/upute.txt` (detaljni zahtjevi, odjeljci 1
 - [x] Potvrditi obaveznost sheme: JSON Schema ili XSD za barem jedan unos; zbog odabranog JSON-a koristimo JSON Schemu.
 - [x] Provjeriti uvjete PHP pristupa: vlastita struktura dopuštena; framework samo uz dogovor s nastavnikom. U fazi 1 odabran pristup bez frameworka.
 - [ ] Potvrditi okruženje izvođenja i zahtjeve završne predaje.
-- [ ] Provjeriti točne LMS rokove i status formalne prijave; tema je prema korisniku odobrena, radi samostalno.
-- [ ] Dogovoriti temu individualnog seminara i pročitati posebne upute/predložak povezane u PDF-u, koji još nisu pregledani.
+- [x] Potvrditi okvirni rok: kraj semestra prema korisniku 2026-10-24.
+- [ ] Provjeriti točan LMS datum i status formalne prijave; tema aplikacije je prema korisniku odobrena, radi samostalno.
+- [x] Dogovoriti temu seminara: „Usporedba REST i SOAP web servisa u modernim web aplikacijama“.
+- [ ] Pročitati posebne upute/predložak seminara povezane u PDF-u i provjeriti formalnu prijavu.
 - [x] Odabrati tehnički minimum faze 1: Docker Compose, PHP 8.4/Apache, MySQL 8.4, Composer 2 i PHP sesije; za vanjski servis odabran NHTSA vPIC nakon provjere dokumentacije i javnog upita.
-- [ ] Potvrditi detaljna poslovna pravila i polja prije sheme u fazi 2.
+- [x] Potvrditi početna pravila i razraditi polja za shemu u fazi 2; daljnje vremenske provjere razraditi uz CRUD.
 
 ## Dopune obaveznih zahtjeva nakon pregleda izvora
 Sljedeće stavke razrađuju gornji sažeti popis; nisu dodatne opcionalne funkcionalnosti.
@@ -87,10 +90,10 @@ Sljedeće stavke razrađuju gornji sažeti popis; nisu dodatne opcionalne funkci
 - [ ] Urednička/administratorska uloga ne daje pristup privatnim vozilima i evidencijama drugih korisnika.
 
 ### Organizacija i baza (odjeljci 4 i 7)
-- [ ] Konfiguracija, baza, poslovna logika i prikaz odvojeni u smislenoj PHP strukturi.
-- [ ] Model korisnika, uloga, vijesti, kategorija i slika uz entitete AutoDnevnika.
-- [ ] Primarni/strani ključevi, prikladni tipovi i pravila brisanja povezanih zapisa; jedinstven e-mail.
-- [ ] Skripta/migracije za bazu i izmišljeni demo podaci: sve uloge, više kategorija, nacrti i objavljene vijesti.
+- [x] Početna PHP struktura odvaja konfiguraciju, bazu i prikaz; poslovne obrade dodavati uz buduće funkcionalnosti.
+- [x] Početni model korisnika, uloga, vijesti, kategorija i slika uz entitete AutoDnevnika.
+- [x] Početni primarni/strani ključevi, tipovi, pravila brisanja i jedinstven e-mail provjereni testovima.
+- [x] Instalacijska SQL skripta i izmišljeni demo podaci: sve uloge, više kategorija, nacrti i objavljene vijesti. Stvarne demo slike dodati uz CMS.
 - [ ] Transakcije za promjene povezanih zapisa koje moraju ostati usklađene.
 - [ ] Dokumentirane biblioteke i ovisnosti.
 

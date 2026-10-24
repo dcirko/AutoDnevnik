@@ -40,9 +40,11 @@ Dana 2026-10-19 pregledane su izvorne upute `upute.txt`, kratke upute za predaju
 
 Korisnik radi samostalno i potvrdio je da je tema AutoDnevnik odobrena. Prihvaćen je opseg vozila, servisa, goriva/kilometraže, troškova, jednostavnog dashboarda i podsjetnika unutar aplikacije. E-mail podsjetnici nisu dio prve verzije. Obavezni javni sadržaj, CMS, administracija, vlastiti API i vanjski servis ostaju prioritet.
 
-Dana 2026-10-20 započela je faza 1. Korisnik je odabrao Docker nakon prijedloga PHP/MySQL/Apache/Composer okruženja. Pripremljene su razvojne konfiguracije, README, primjer lokalne konfiguracije i Git repozitorij. Detaljan rezultat provjera i status GitHuba vode se u `TASKS.md`. Funkcionalnosti aplikacije i shema baze još nisu implementirane.
+Dana 2026-10-20 započela je faza 1. Korisnik je odabrao Docker nakon prijedloga PHP/MySQL/Apache/Composer okruženja. Pripremljene su razvojne konfiguracije, README, primjer lokalne konfiguracije i Git/GitHub repozitorij.
 
-Plan prati profesorovih 15 tjedana u `TASKS.md`; stvarni datumi ovise o LMS-u. Korisnik očekuje predaju približno krajem godine, ali točan rok nije potvrđen.
+U fazi 2, 2026-10-24, izrađeni su shema baze, ER dijagram, demonstracijski podaci i početna PHP struktura s JSON provjerom pristupa bazi. Korisnik je potvrdio benzinska/dizelska i električna vozila; točenja i punjenja vode se u zajedničkoj evidenciji energije uz odvojene jedinice. Električna vozila za početak prate kWh i troškove, bez stanja baterije i procjene kWh/100 km. Prijava, javne vijesti, CMS i privatni CRUD još nisu implementirani. Rezultati provjera i sljedeći zadaci nalaze se u `TASKS.md`.
+
+Plan prati profesorovih 15 tjedana u `TASKS.md`. Korisnik je 2026-10-24 potvrdio rok do kraja semestra; točan kalendarski datum provjeriti u LMS-u. Smislene izmjene spremamo i šaljemo na GitHub svaki tjedan ili svaka dva tjedna, uz ranije commitove kada je korisna cjelina dovršena.
 
 ## Prijedlog projekta za fazu 1
 - **Naziv:** AutoDnevnik.
@@ -54,7 +56,9 @@ Plan prati profesorovih 15 tjedana u `TASKS.md`; stvarni datumi ovise o LMS-u. K
 - **Vanjski servis:** NHTSA vPIC za prijedlog marke, modela, modelne godine i dostupnih tehničkih podataka pri unosu VIN-a. Nepotpuna pokrivenost, posebno vozila koja nisu namijenjena američkom tržištu, ne smije blokirati ručni unos.
 - **Organizacija:** samostalan rad; kontinuirano verzioniranje na GitHub računu `dcirko`.
 - **Status:** pripremljen prijedlog u projektnoj dokumentaciji; ništa nije poslano profesoru ili LMS-u kroz ovaj rad. Tema aplikacije već je odobrena prema korisniku.
-- **Seminar, prijedlog za dogovor:** „Projektiranje i sigurnost REST API-ja u PHP web-aplikaciji na primjeru AutoDnevnika“. To nije potvrđena niti prijavljena tema seminara; predložak treba zasebno pregledati.
+
+## Seminar — zasebna obaveza
+Seminar i projekt AutoDnevnik su odvojene cjeline, prema korisnikovoj uputi 2026-10-24. Tema seminara je „Usporedba REST i SOAP web servisa u modernim web aplikacijama“. Seminar nije dokumentacija AutoDnevnika niti njegova razvojna faza. Formalni status prijave i poseban predložak još nisu provjereni; te stavke ne blokiraju razvoj aplikacije.
 
 ## Pregled aplikacije
 AutoDnevnik je osobni dnevnik za jedno ili više vlastitih vozila. Korisnik otvara račun, unosi vozilo ručno ili uz pomoć VIN servisa, vodi evidencije i pregledava troškove te obaveze. Javni dio donosi automobilske vijesti i savjete s kategorijama, pretragom i straničenjem. Urednik izrađuje i uređuje vlastite vijesti, a administrator upravlja svim vijestima, kategorijama, korisnicima i ulogama.

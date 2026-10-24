@@ -76,3 +76,35 @@ Ovo su zahtjevi dostavljenih izvora, a ne novi korisnikovi tehnički odabiri:
 - **Status:** korisnik potvrdio GitHub račun `dcirko`; priprema repozitorija dio je tražene faze 1
 - **Odluka:** repozitorij `dcirko/AutoDnevnik`, grana `main`. Verzionaraju se vlastiti projektni dokumenti i kod; izvorne upute/PDF, lokalni .env, podaci i ovisnosti isključeni su kroz .gitignore.
 - **Razlog:** javni repozitorij treba sadržavati projekt i dokumentaciju bez nastavnih pristupnih podataka i lokalnih tajni.
+
+## D-011 — Tema seminara i ritam rada
+- **Datum:** 2026-10-24
+- **Status:** potvrđeno korisnikovom porukom
+- **Odluka:** tema seminara je „Usporedba REST i SOAP web servisa u modernim web aplikacijama“. Rok projekta je do kraja semestra; napredak objavljujemo kroz smislene commitove svaki tjedan ili svaka dva tjedna.
+- **Granica:** seminar uspoređuje REST i SOAP; aplikacija i dalje koristi dogovoreni REST API. Točan kalendarski datum, predložak i formalni status prijave još treba provjeriti.
+
+## D-012 — Odvojeno planiranje seminara i projekta
+- **Datum:** 2026-10-24
+- **Status:** izričito pojašnjeno korisnikovom porukom
+- **Odluka:** seminar i projekt AutoDnevnik su zasebne cjeline. Osam razvojnih faza odnosi se na aplikaciju i njezinu dokumentaciju; pisanje seminara nije projektna faza niti preduvjet za fazu 2.
+- **Napomena:** zahtjevi profesora za paket predaje ostaju evidentirani, ali ne znače da seminar postaje dio implementacije AutoDnevnika.
+
+## D-013 — Električna vozila i evidencija energije
+- **Datum:** 2026-10-24
+- **Status:** potvrđeno korisnikovim odgovorima u fazi 2
+- **Odluka:** prva verzija uključuje benzin, dizel i električna vozila. Zajednička evidencija energije sprema točenja u litrama i punjenja u kWh. Električna vozila prate kupljenu energiju i troškove, bez stanja baterije i procjene kWh/100 km.
+- **Razlog:** pokriti električna vozila bez lažnog izračuna potrošnje iz nepotpunih podataka. Jedinice se ne miješaju. LPG i hibridne pogone zasad ne uvodimo.
+
+## D-014 — Troškovi, podsjetnici, vlasništvo i brisanje
+- **Datum:** 2026-10-24
+- **Status:** potvrđeno korisnikovim odgovorima u fazi 2
+- **Odluka:** servis, energija i dodatni troškovi zasebni su izvori koji se u ukupnom trošku zbrajaju jednom. Podsjetnik ima datum, kilometražu ili oba praga, a dospijeva kad je dosegnut bilo koji postavljeni prag.
+- **Privatnost:** jedno vozilo pripada jednom korisniku. Urednik/admin mogu voditi svoja vozila, ali nemaju pristup tuđim privatnim evidencijama.
+- **Brisanje:** vozilo se nakon potvrde briše s pripadajućim evidencijama; korisnici se deaktiviraju. Detaljne FK akcije i buduća transakcija brisanja opisani su u arhitekturi.
+
+## D-015 — Početna shema i mali PHP temelj
+- **Datum:** 2026-10-24
+- **Status:** provedeno tijekom faze 2 u okviru dogovorenih zahtjeva
+- **Odluka:** početna SQL shema s deset aplikacijskih tablica i evidencijom verzije; vlastita PHP struktura s Composer PSR-4 autoloadom, PDO, odvojenim JSON odgovorima i HTML predloškom. Bez vanjskih PHP biblioteka u ovoj fazi.
+- **Razlog:** ponovljiva instalacija, stvarni ključevi/ograničenja i čitljiva organizacija bez gradnje vlastitog frameworka. Instalacija ne briše postojeće tablice; demo unos ne prepisuje postojeće korisnike.
+- **Provjera:** izolirana instalacija, 20 transakcijskih provjera baze, HTTP odgovori i nedostupnost privatnih putanja. Autentifikacija, poslovne rute i CMS ostaju u sljedećim fazama.

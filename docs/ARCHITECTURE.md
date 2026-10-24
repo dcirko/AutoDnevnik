@@ -1,7 +1,7 @@
 # Arhitektura
 
 ## Status
-Ovo je početni tehnički okvir. Odluke su u `DECISIONS.md`; preostali prijedlozi nisu konačni odabiri. U fazi 1 pripremljeno je Docker razvojno okruženje; funkcionalnosti aplikacije još nisu implementirane.
+U fazi 2 izrađeni su početna shema baze, demonstracijski podaci i PHP ulazna točka s provjerom pristupa bazi. Poslovne odluke potvrđene su 2026-10-24 i evidentirane u `DECISIONS.md`. Korisnički računi, javne vijesti i privatni CRUD još nisu implementirani kroz sučelje/API.
 
 ## Potvrđeni okvir
 - PHP 8.4 bez frameworka, MySQL 8.4, PDO; Docker Compose s PHP/Apache web servisom i bazom.
@@ -24,21 +24,140 @@ src/            PHP obrada zahtjeva, poslovna logika i pristup podacima
 config/         konfiguracija bez verzioniranih tajni
 database/       verzionirana shema/migracije i razvojni početni podaci
 tests/          testovi
+bin/            CLI instalacija i demo unos
+templates/      HTML prikaz odvojen od obrade
+docker/         razvojna konfiguracija
 ```
-Za početak odvojiti usmjeravanje zahtjeva, obradu, poslovna pravila i pristup bazi bez nepotrebnih slojeva. Vlastita PHP struktura bez frameworka odabrana je u fazi 1; detalje izraditi u fazi 2.
+`public/index.php` usmjerava početne zahtjeve, `src/Database/Connection.php` otvara PDO vezu, a `src/Http/Response.php` oblikuje JSON odgovore. `config/app.php` čita varijable procesa, `src/bootstrap.php` učitava Composer autoload i konfiguraciju. HTML je u `templates/`. Poslovne obrade izdvajat ćemo uz pojedine funkcionalnosti, bez generičkog vlastitog frameworka.
 
 ## Lokalno okruženje — faza 1
 - `compose.yaml`: servis `web` gradi se iz `docker/php/Dockerfile`, servis `db` koristi službenu sliku `mysql:8.4`.
 - Web koristi `php:8.4-apache`, Composer 2 i dodanu ekstenziju `pdo_mysql`. Slike su vezane uz verzijsku granu; točne dobivene zakrpe evidentirati nakon pokretanja.
-- Samo `public/` poslužuje se pregledniku, na `127.0.0.1:8080`. Pristup popisu datoteka je isključen. Aplikacijska ulazna točka dolazi u fazi 2.
+- Samo `public/` poslužuje se pregledniku, na `127.0.0.1:8080`. Pristup popisu datoteka je isključen. Apache `FallbackResource /index.php` šalje nepostojeće putanje PHP usmjeravanju; stvarne javne resurse poslužuje normalno.
 - Baza nema objavljen host port. Podaci su u trajnom volumenu `db-data`; aplikacija koristi zaseban DB račun, ne root.
 - `.env` ostaje lokalno, `.env.example` sadrži primjer bez stvarnih lozinki. Compose prosljeđuje varijable procesu; PHP će ih čitati kroz `getenv()`, pa zasebna dotenv biblioteka zasad nije potrebna.
 - PHP/Composer/MySQL ne instaliraju se posebno na Windows; radi se kroz Docker naredbe iz README-a.
 
 ## Baza i vlasništvo
-Odabran je MySQL 8.4. Početni kandidati za entitete su korisnik, uloga, članak, kategorija, slika članka, vozilo, servis, točenje goriva, dodatni trošak i podsjetnik. Vijest ima autora i kategoriju te metapodatke slike ako je dodana. Vozilo bi pripadalo jednom korisniku, a evidencije i podsjetnici jednom vozilu. Predlaže se jedna spremljena uloga po korisniku; potvrditi prije sheme.
+Izvor stvarne sheme je `database/schema.sql`: deset aplikacijskih tablica i tehnička tablica `schema_versions`. Koristimo MySQL 8.4/InnoDB, UTF-8 (`utf8mb4`), primarne/strane ključeve, jedinstvene indekse i CHECK ograničenja. Svaki korisnik ima jednu ulogu, vozilo jednog vlasnika, a svaka privatna evidencija jedno vozilo. Posjetitelj nije zapis u tablici uloga.
 
-Prije implementacije odrediti obavezna polja, strane ključeve, pravila brisanja i način povezivanja servisa/goriva s troškovima kako se isti iznos ne bi dvostruko zbrajao. Pravila obračuna potrošnje i troškova također treba izričito definirati. ER dijagram i detalje sheme zasad vodimo ovdje.
+### Tablice i važna polja
+| Tablica | Namjena i obavezni podaci |
+| --- | --- |
+| `roles` | Kod user/editor/admin i prikazni naziv |
+| `users` | Uloga, ime, jedinstven e-mail, hash lozinke, aktivnost i vremena izrade/izmjene |
+| `categories` | Jedinstven naziv kategorije vijesti |
+| `articles` | Autor, kategorija, naslov, sažetak, HTML sadržaj, nacrt/objavljeno i vremena izrade/izmjene/objave |
+| `article_images` | Najviše jedna slika po vijesti: putanja, izvorni naziv, MIME, veličina, alternativni tekst; datoteka se sprema zasebno |
+| `vehicles` | Vlasnik, naziv, marka, model, godina, vrsta energije i početna kilometraža; VIN/registracija/vrijeme VIN dohvata opcionalni |
+| `service_entries` | Vozilo, datum, kilometraža, opis i iznos EUR; radionica opcionalna |
+| `energy_entries` | Vozilo i njegova vrsta energije, datum, kilometraža, količina i iznos EUR; benzin/dizel imaju oznaku punog spremnika, električno punjenje nema |
+| `expenses` | Vozilo, datum, kategorija dodatnog troška, opis i iznos EUR; kilometraža opcionalna |
+| `reminders` | Vozilo, naslov i datum i/ili kilometarski prag; vrijeme dovršetka i napomena opcionalni |
+| `schema_versions` | Verzija početne sheme, SHA-256 kontrolni zbroj i vrijeme primjene; nije poslovni entitet |
+
+Novac je `DECIMAL(12,2)`, količina `DECIMAL(12,3)`, kilometraža nenegativan cijeli broj. Ne pohranjujemo izračunate ukupne troškove, prosječnu potrošnju ni dupliciranu trenutačnu kilometražu. VIN nije obavezan; kada postoji, mora imati 17 znakova i jedinstven je unutar vlasnikovih vozila. Stroža provjera VIN znakova i dinamička granica godine slijede uz API validaciju.
+
+Datumi događaja (`occurred_on`, `due_on`) lokalni su kalendarski datumi. Tehnička vremena (`created_at`, `published_at`, `completed_at` itd.) spremaju se u UTC; PDO postavlja vremensku zonu veze na UTC. Sučelje ih prikazuje u Europe/Zagreb.
+
+### ER dijagram početne sheme
+Prikazane su stvarne tablice, glavni ključevi i kardinalnosti. Potpuna polja i ograničenja nalaze se u SQL datoteci. Veza vozilo–energija u SQL-u koristi složeni strani ključ `(vehicle_id, energy_type)`.
+
+```mermaid
+erDiagram
+    roles ||--o{ users : dodjeljuje
+    users ||--o{ vehicles : posjeduje
+    users ||--o{ articles : autor
+    categories ||--o{ articles : razvrstava
+    articles ||--o| article_images : slika
+    vehicles ||--o{ service_entries : servisi
+    vehicles ||--o{ energy_entries : energija
+    vehicles ||--o{ expenses : troskovi
+    vehicles ||--o{ reminders : podsjetnici
+    roles {
+        tinyint id PK
+        varchar code UK
+    }
+    users {
+        bigint id PK
+        tinyint role_id FK
+        varchar email UK
+        boolean is_active
+    }
+    categories {
+        bigint id PK
+        varchar name UK
+    }
+    articles {
+        bigint id PK
+        bigint author_id FK
+        bigint category_id FK
+        varchar status
+        datetime published_at
+    }
+    article_images {
+        bigint id PK
+        bigint article_id FK, UK
+        varchar storage_path UK
+    }
+    vehicles {
+        bigint id PK
+        bigint owner_id FK
+        varchar energy_type
+        int initial_odometer_km
+        varchar vin
+    }
+    service_entries {
+        bigint id PK
+        bigint vehicle_id FK
+        date occurred_on
+        int odometer_km
+        decimal amount_eur
+    }
+    energy_entries {
+        bigint id PK
+        bigint vehicle_id FK
+        varchar energy_type FK
+        date occurred_on
+        int odometer_km
+        decimal quantity
+        decimal amount_eur
+        boolean is_full_tank
+    }
+    expenses {
+        bigint id PK
+        bigint vehicle_id FK
+        varchar category
+        decimal amount_eur
+    }
+    reminders {
+        bigint id PK
+        bigint vehicle_id FK
+        date due_on
+        int due_odometer_km
+        datetime completed_at
+    }
+    schema_versions {
+        varchar version PK
+        char checksum
+        datetime applied_at
+    }
+```
+
+### Pravila brisanja i promjena
+- Korisnika s vozilima ili člancima ne brišemo fizički; FK to blokira. Administracija će mijenjati `is_active`.
+- Kategoriju koju koristi vijest i ulogu koju koristi korisnik nije dopušteno obrisati (`RESTRICT`).
+- Brisanje članka kaskadno uklanja metapodatke slike. Brisanje stvarne datoteke treba implementirati uz CMS; FK ne briše datoteke s diska.
+- Brisanje vozila treba provesti u transakciji: nakon provjere vlasnika ukloniti njegove `energy_entries`, zatim vozilo. FK kaskadno uklanja servise, dodatne troškove i podsjetnike. Složeni FK energije namjerno je restriktivan zbog [MySQL pravila za CHECK i referencijalne akcije](https://dev.mysql.com/doc/refman/8.4/en/create-table-check-constraints.html); izravan pokušaj brisanja vozila s energijom zato se odbija.
+- Složeni FK energije sprječava benzin za električno vozilo i promjenu vrste energije vozila koje već ima te evidencije.
+- CASCADE nije autorizacija: vlasništvo se mora provjeriti na backendu prije svih privatnih radnji, što slijedi uz račune i CRUD.
+
+### Instalacija i demo podaci
+`bin/database-install.php` primjenjuje poznatu početnu SQL datoteku samo na praznu bazu. Kontrolni zbroj i popis očekivanih tablica omogućuju sigurno ponovno pokretanje bez promjena. Ako shema ne odgovara ili je instalacija djelomična, skripta odbija nastaviti; nema automatskog DROP-a/resetiranja. MySQL DDL nema rollback cijele instalacije. Nakon objavljivanja ove verzije promjene sheme uvoditi novom migracijom, ne prepisivati primijenjenu shemu.
+
+`bin/database-seed.php` dopušten je samo uz `APP_ENV=local`; unosi izmišljene podatke u transakciji, bez prepisivanja postojećih korisnika. Sadrži 5 računa (dva vlasnika, urednik, admin, neaktivan korisnik), 3 kategorije, 4 vijesti (3 objavljene, 1 nacrt), 3 vozila (benzin, električno, dizel), 2 servisa, 6 točenja/punjenja, 2 dodatna troška i 4 podsjetnika. Slike će dobiti stvarne demo datoteke uz CMS u fazi 4; trenutačno su njihova ograničenja provjerena testnim metapodacima.
+
+Svaki demo račun dobiva nasumičnu lozinku, u bazu se sprema hash. Lokalni pristupni podaci su isključivo u `storage/demo-accounts.json`, izvan javnog direktorija i Gita. Te račune još nije moguće prijaviti jer autentifikacija dolazi u fazi 3.
 
 ## Uloge i pristup
 | Uloga | Predviđeni pristup |
@@ -48,7 +167,7 @@ Prije implementacije odrediti obavezna polja, strane ključeve, pravila brisanja
 | Urednik | Izrada i uređivanje vlastitih vijesti/savjeta |
 | Administrator | Sve vijesti, kategorije, korisnici, uloge i aktivacija/deaktivacija računa |
 
-Posjetitelj je neprijavljeno stanje; ne mora biti spremljena uloga u bazi. Nasljeđivanje ovlasti urednika i administratora treba potvrditi. Urednička ili administratorska uloga sama po sebi ne daje pristup privatnim evidencijama drugih korisnika.
+Posjetitelj je neprijavljeno stanje i ne sprema se u bazu. Urednik i administrator imaju i mogućnosti običnog korisnika za vlastita vozila, bez pristupa privatnim evidencijama drugih korisnika. To pravilo korisnik je potvrdio 2026-10-24; provjere u aplikaciji slijede uz autentifikaciju.
 
 ## Predloženi REST API
 Predlaže se prefiks `/api/v1/` i resursi za autentifikaciju, vozila, servise, gorivo, troškove, podsjetnike, članke i administraciju korisnika. Točne rute i ugovore definirati uz svaku funkcionalnost.
@@ -70,8 +189,8 @@ Vlastiti API prihvaća JSON za strukturirane podatke; prijenos slike može imati
 - Slike zahtijevaju provjeru sadržaja/vrste i veličine, kontrolirana imena i pohranu bez mogućnosti izvršavanja.
 - Uređivač obogaćenog teksta zahtijeva backend sanitizaciju dopuštenog HTML-a, uz biblioteku čije uvjete i ovisnosti treba provjeriti prije izbora.
 
-## Prijedlozi za dogovor prije implementacije
-Poslovna pravila u nastavku još nisu potvrđena. Tehničke stavke označene kao odabrane pripremljene su u fazi 1; detaljne biblioteke tek treba odabrati.
+## Poslovna pravila i odabiri prve verzije
+Korisnik je 2026-10-24 potvrdio električna vozila, model troškova/podsjetnika, privatnost i brisanje. Detalji polja i ograničenja razrađeni su u fazi 2. Biblioteke za CMS i JSON Schemu odabrat ćemo uz te funkcionalnosti.
 
 | Tema | Prijedlog za prvu verziju |
 | --- | --- |
@@ -84,16 +203,34 @@ Poslovna pravila u nastavku još nisu potvrđena. Tehničke stavke označene kao
 | Kategorije | Zabraniti brisanje kategorije koja sadrži vijesti; prvo promijeniti kategoriju tih vijesti |
 | Vozilo | Naziv, marka, model, godina i početna kilometraža; VIN opcionalan radi ručnog unosa; obaveznost/ostala polja tek se dogovaraju |
 | Servis | Datum, kilometraža, opis i iznos; radionica/napomena opcionalne |
-| Gorivo | Datum, kilometraža, litre, ukupni iznos i oznaka punog spremnika; prva verzija prvenstveno za vozila s tekućim gorivom |
+| Energija | Benzin/dizel u litrama s oznakom punog spremnika; električna punjenja u kWh, bez te oznake; sve uz datum, kilometražu i iznos |
 | Troškovi | Servis i gorivo nose vlastiti iznos; dodatni troškovi za registraciju, osiguranje, parking itd.; dashboard zbraja tri izvora jednom, bez kopiranja iznosa |
 | Novac/jedinice | EUR, kilometri i litre; novac spremati decimalno, ne kao binarni floating point |
-| Potrošnja | Od punog do punog spremnika: zbroj litara nakon početnog punog do završnog punog / razlika kilometraže × 100, uključujući međutočenja; bez dovoljne evidencije prikazati nedostatak podataka, ne nulu |
+| Potrošnja | Benzin/dizel: od punog do punog, zbroj litara nakon početnog punog do završnog punog / razlika km × 100, uz međutočenja; prvi puni unos nije potrošnja tog intervala. Bez dovoljno podataka nema izračuna. Električno: ukupni napunjeni kWh i troškovi, bez procjene kWh/100 km i bez evidencije stanja baterije |
 | Podsjetnici | Datum i/ili kilometraža, status otvoreno/dovršeno; dospjelo kad je dosegnut bilo koji prag; kilometarski status prema posljednjoj evidentiranoj kilometraži |
 | Dashboard | Vozilo/razdoblje, servis/gorivo/ostali troškovi i ukupno, potrošnja kada je moguća te dospjeli/nadolazeći podsjetnici; prag za nadolazeće dogovoriti |
 | Brisanje | Vozilo s pripadajućim evidencijama nakon jasne potvrde, uz transakciju gdje treba; korisnike primarno deaktivirati |
 | VIN | Poziv na izričitu radnju, rezultat predlaže polja koja korisnik potvrđuje; nepotpun rezultat ne blokira ručni unos |
 
-Prije sheme još potvrditi podržavamo li električna vozila i zasebno punjenje, pravila ispravaka kilometraže te detaljna polja/ograničenja. Te nadogradnje nisu preduvjet obavezne jezgre kolegija.
+Električna vozila uključena su, LPG i hibridna vozila nisu dio početnog modela. Jedinica količine izvodi se iz vrste energije (`electricity` znači kWh, ostalo litre); količine različitih jedinica ne zbrajaju se. Trenutačna kilometraža bit će maksimum početne i zabilježene kilometraže iz evidencija; podsjetnik nije očitanje kilometraže. Provjeru vremenskog redoslijeda/ispravaka povijesnih očitanja i prag "uskoro" razraditi uz CRUD i dashboard. Međutablična i vremenska pravila ne može zamijeniti CHECK pojedinog retka.
+
+### Početne rute — provedeno u fazi 2
+| Metoda / putanja | Odgovor |
+| --- | --- |
+| `GET /` | 200, HTML tehnička početna stranica |
+| `GET /api/v1/health` | 200 i `{"data":{"status":"ok"}}` ako PDO može pročitati tablicu uloga |
+| Nedostupna baza na health ruti | 503 i `{"error":{"code":"service_unavailable","message":"Usluga trenutačno nije dostupna."}}` |
+| Druga metoda poznate rute | 405, JSON greška `method_not_allowed`, `Allow: GET` |
+| Nepoznata putanja | 404, JSON greška `not_found` |
+
+Ovo je samo tehnički temelj API-ja. Rute vijesti i vozila, prijava, autorizacija, validacija unosa i JSON Schema nisu gotove ovom fazom. JSON tijela ne izlažu konfiguraciju, verzije, tablice ni PDO detalje; detalji nastale greške u ovoj fazi svode se na klasu iznimke u internom logu.
+
+### Provjere faze 2
+- Instalacija sheme prvo provjerena u novoj izoliranoj bazi, zatim primijenjena na razvojnu bazu. Privremena baza i njezine dodijeljene ovlasti uklonjene su nakon provjera.
+- `tests/database.php`: 20 provjera ograničenja, decimalnog zbrajanja i brisanja. Testni podaci uvijek se vraćaju rollbackom; InnoDB AUTO_INCREMENT brojači mogu preskočiti iskorištene testne brojeve.
+- `tests/http.php`: 8 provjera stvarnih HTTP odgovora, JSON oblika, Allow zaglavlja i nedostupnosti privatnih putanja. Pokretanje unutar web kontejnera; `TEST_BASE_URL` može promijeniti osnovnu adresu.
+- Posebno provjereno privremeno zaustavljanje projektne baze: health vraća 503 bez internih detalja, nakon pokretanja ponovno 200.
+- PHP sintaksa i Apache konfiguracija provjereni. Instalacija i demo unos ponovno pokrenuti bez dupliciranja/prepisivanja podataka.
 
 ## Vanjski API
 Za prijedlog projekta odabran je NHTSA vPIC. [Dokumentacija](https://vpic.nhtsa.dot.gov/api/) i [FAQ](https://vpic.nhtsa.dot.gov/api/home/index/faq) provjereni su 2026-10-20. Javan je i ne zahtijeva registraciju/ključ; servis ima automatsku kontrolu prometa, pa ga ne tretirati kao neograničen resurs. Pokrivenost stranih vozila ovisi o registraciji proizvođača za američko tržište.
@@ -107,5 +244,5 @@ Ne obećavamo potpunu pokrivenost hrvatskih/europskih vozila. Ručni unos ostaje
 ## Otvorene odluke
 - Detalji API ugovora i implementacija sesijske autentifikacije.
 - Provjera pokrivenosti odabranog VIN servisa prije integracije.
-- Podatkovni model, obračun statistike i prikaz podsjetnika.
-- ER dijagram, alati za testiranje i okruženje predaje.
+- Validacija povijesnih očitanja i detalji prikaza podsjetnika/obračuna statistike kroz budući API.
+- Okruženje završne predaje.
