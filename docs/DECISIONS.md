@@ -108,3 +108,10 @@ Ovo su zahtjevi dostavljenih izvora, a ne novi korisnikovi tehnički odabiri:
 - **Odluka:** početna SQL shema s deset aplikacijskih tablica i evidencijom verzije; vlastita PHP struktura s Composer PSR-4 autoloadom, PDO, odvojenim JSON odgovorima i HTML predloškom. Bez vanjskih PHP biblioteka u ovoj fazi.
 - **Razlog:** ponovljiva instalacija, stvarni ključevi/ograničenja i čitljiva organizacija bez gradnje vlastitog frameworka. Instalacija ne briše postojeće tablice; demo unos ne prepisuje postojeće korisnike.
 - **Provjera:** izolirana instalacija, 20 transakcijskih provjera baze, HTTP odgovori i nedostupnost privatnih putanja. Autentifikacija, poslovne rute i CMS ostaju u sljedećim fazama.
+
+## D-016 — Lokalni GUI pristup bazi i zaseban ER prikaz
+- **Datum:** 2026-10-24
+- **Status:** prema korisnikovu zahtjevu za pregled baze i izdvojenu sliku dijagrama
+- **Odluka:** MySQL je lokalnom klijentu dostupan na `127.0.0.1:3307`, uz postojeći aplikacijski račun. PHP u Dockeru i dalje koristi `db:3306`. DBeaver je već instaliran na računalu; SQL Server/SSMS ne uvodimo u tehnološki paket.
+- **Dijagram:** PNG i SVG datoteke odvojene su od Markdowna, uz zaseban Mermaid pregled glavnih ključeva. Dokumenti sadrže poveznice na te datoteke.
+- **Provjera:** lokalni port prihvaća MySQL protokol; trajni volumen i postojeći podaci sačuvani su pri ponovnom stvaranju DB kontejnera.

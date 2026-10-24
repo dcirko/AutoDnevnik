@@ -21,7 +21,7 @@ Faza 2: početna shema, ER dijagram, demonstracijski podaci, PHP struktura i pro
 ## Faza 2 — provedeno 2026-10-24
 - [x] Zajedno potvrditi opseg električnih vozila, model troškova/podsjetnika i privatnost/brisanje.
 - [x] Razraditi početna polja, ključeve, ograničenja i pravila brisanja.
-- [x] Izraditi ER dijagram u `ARCHITECTURE.md` i primjenjivu SQL shemu u `database/schema.sql`.
+- [x] Izraditi ER dijagram i SQL shemu u `database/schema.sql`. Prema naknadnom zahtjevu dijagram je izdvojen u `docs/er-diagram.png` i `.svg`; arhitektura sadrži poveznice.
 - [x] Provjeriti shemu prvo u izoliranoj privremenoj bazi, zatim postaviti razvojnu bazu i izmišljene demo podatke.
 - [x] Dodati CLI instalaciju i demo unos koji ne brišu ni prepisuju postojeće podatke.
 - [x] Postaviti Composer autoload, konfiguraciju, PDO, JSON odgovore, Apache usmjeravanje i početni HTML predložak.
@@ -138,3 +138,9 @@ Nakon faze 2 slijedi faza 3. Početi autentifikacijom i provjerama pristupa prij
 - `/` vraća HTML 200; `/api/v1/health` vraća JSON 200, nepoznata ruta JSON 404, POST na health JSON 405 s Allow. .env (403), projektni dokumenti (404), demo pristupni podaci (404) i CLI skripte (404) nisu dostupni kroz web.
 - Zaustavljena je samo projektna baza radi negativne provjere: health je vratio generički 503, nakon ponovnog pokretanja 200. Servisi su ostavljeni pokrenuti.
 - README opisuje instalaciju/autoload/shema/demo/testove. Aplikacija sada ima tehničku početnu stranicu; korisničko sučelje iz faze 3 nije izrađeno.
+
+## Dopuna faze 2 — lokalni pregled baze i izdvojen dijagram
+- Omogućen loopback MySQL port `127.0.0.1:3307`, podesiv kroz `DB_FORWARD_PORT`, za DBeaver. Ne mijenja se interna adresa aplikacije `db:3306`.
+- Izrađene zasebne PNG/SVG slike sa svim stupcima SQL sheme i Mermaid datoteka sa sažetim ključevima/vezama. Slike su vizualno pregledane.
+- Lokalni TCP pristup provjeren MySQL greetingom (protokol 10); DB kontejner je healthy i podaci su sačuvani.
+- README sadrži postavke DBeaver veze. Lozinka ostaje u lokalnom .env i nije navedena u dokumentaciji.

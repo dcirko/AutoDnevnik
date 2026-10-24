@@ -34,7 +34,7 @@ docker/         razvojna konfiguracija
 - `compose.yaml`: servis `web` gradi se iz `docker/php/Dockerfile`, servis `db` koristi službenu sliku `mysql:8.4`.
 - Web koristi `php:8.4-apache`, Composer 2 i dodanu ekstenziju `pdo_mysql`. Slike su vezane uz verzijsku granu; točne dobivene zakrpe evidentirati nakon pokretanja.
 - Samo `public/` poslužuje se pregledniku, na `127.0.0.1:8080`. Pristup popisu datoteka je isključen. Apache `FallbackResource /index.php` šalje nepostojeće putanje PHP usmjeravanju; stvarne javne resurse poslužuje normalno.
-- Baza nema objavljen host port. Podaci su u trajnom volumenu `db-data`; aplikacija koristi zaseban DB račun, ne root.
+- Za lokalni pregled u DBeaveru baza je dostupna na `127.0.0.1:3307` (podesivo kroz `DB_FORWARD_PORT`). Port nije vezan na javna mrežna sučelja. Unutar Dockera aplikacija i dalje koristi `db:3306`. Podaci su u trajnom volumenu `db-data`; koristi se zaseban DB račun, ne root.
 - `.env` ostaje lokalno, `.env.example` sadrži primjer bez stvarnih lozinki. Compose prosljeđuje varijable procesu; PHP će ih čitati kroz `getenv()`, pa zasebna dotenv biblioteka zasad nije potrebna.
 - PHP/Composer/MySQL ne instaliraju se posebno na Windows; radi se kroz Docker naredbe iz README-a.
 
@@ -61,88 +61,15 @@ Novac je `DECIMAL(12,2)`, količina `DECIMAL(12,3)`, kilometraža nenegativan ci
 Datumi događaja (`occurred_on`, `due_on`) lokalni su kalendarski datumi. Tehnička vremena (`created_at`, `published_at`, `completed_at` itd.) spremaju se u UTC; PDO postavlja vremensku zonu veze na UTC. Sučelje ih prikazuje u Europe/Zagreb.
 
 ### ER dijagram početne sheme
-Prikazane su stvarne tablice, glavni ključevi i kardinalnosti. Potpuna polja i ograničenja nalaze se u SQL datoteci. Veza vozilo–energija u SQL-u koristi složeni strani ključ `(vehicle_id, energy_type)`.
+Prikazane su stvarne tablice, polja i kardinalnosti. Potpuna ograničenja nalaze se u SQL datoteci. Veza vozilo–energija u SQL-u koristi složeni strani ključ `(vehicle_id, energy_type)`.
 
-```mermaid
-erDiagram
-    roles ||--o{ users : dodjeljuje
-    users ||--o{ vehicles : posjeduje
-    users ||--o{ articles : autor
-    categories ||--o{ articles : razvrstava
-    articles ||--o| article_images : slika
-    vehicles ||--o{ service_entries : servisi
-    vehicles ||--o{ energy_entries : energija
-    vehicles ||--o{ expenses : troskovi
-    vehicles ||--o{ reminders : podsjetnici
-    roles {
-        tinyint id PK
-        varchar code UK
-    }
-    users {
-        bigint id PK
-        tinyint role_id FK
-        varchar email UK
-        boolean is_active
-    }
-    categories {
-        bigint id PK
-        varchar name UK
-    }
-    articles {
-        bigint id PK
-        bigint author_id FK
-        bigint category_id FK
-        varchar status
-        datetime published_at
-    }
-    article_images {
-        bigint id PK
-        bigint article_id FK, UK
-        varchar storage_path UK
-    }
-    vehicles {
-        bigint id PK
-        bigint owner_id FK
-        varchar energy_type
-        int initial_odometer_km
-        varchar vin
-    }
-    service_entries {
-        bigint id PK
-        bigint vehicle_id FK
-        date occurred_on
-        int odometer_km
-        decimal amount_eur
-    }
-    energy_entries {
-        bigint id PK
-        bigint vehicle_id FK
-        varchar energy_type FK
-        date occurred_on
-        int odometer_km
-        decimal quantity
-        decimal amount_eur
-        boolean is_full_tank
-    }
-    expenses {
-        bigint id PK
-        bigint vehicle_id FK
-        varchar category
-        decimal amount_eur
-    }
-    reminders {
-        bigint id PK
-        bigint vehicle_id FK
-        date due_on
-        int due_odometer_km
-        datetime completed_at
-    }
-    schema_versions {
-        varchar version PK
-        char checksum
-        datetime applied_at
-    }
-```
+Dijagram je izdvojen iz Markdowna u zasebne datoteke:
+
+- [PNG slika s potpunim poljima](er-diagram.png)
+- [SVG vektorska slika](er-diagram.svg)
+- [Mermaid pregled ključeva i veza](er-diagram.mmd)
+
+Slike prikazuju sva polja početne SQL sheme. Mermaid datoteka zadržava sažeti pregled glavnih ključeva i kardinalnosti.
 
 ### Pravila brisanja i promjena
 - Korisnika s vozilima ili člancima ne brišemo fizički; FK to blokira. Administracija će mijenjati `is_active`.

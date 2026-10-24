@@ -67,14 +67,28 @@ Oznake slika fiksiraju verzijsku granu, ne točnu zakrpu. Točne lokalno provjer
    docker compose exec web composer test
    ```
 
-Web je vezan samo na `http://localhost:8080`; port se može promijeniti kroz `APP_PORT`, uz usklađivanje `APP_URL`. Apache poslužuje isključivo `public/`, ne dokumentaciju ili `.env`. MySQL port nije objavljen na Windowsu; aplikacija mu pristupa na `db:3306`. Za rad s bazom može se koristiti `docker compose exec db mysql -u autodnevnik -p autodnevnik`, uz unos lozinke u interaktivnom upitu.
+Web je vezan samo na `http://localhost:8080`; port se može promijeniti kroz `APP_PORT`, uz usklađivanje `APP_URL`. Apache poslužuje isključivo `public/`, ne dokumentaciju ili `.env`. MySQL je za lokalni DB klijent dostupan na `127.0.0.1:3307`; aplikacija unutar Dockera i dalje koristi `db:3306`. Za CLI rad može se koristiti `docker compose exec db mysql -u autodnevnik -p autodnevnik`, uz unos lozinke u interaktivnom upitu.
+
+### Pregled baze u DBeaveru
+SSMS je klijent za Microsoft SQL Server; ovaj projekt koristi MySQL. U DBeaveru odabrati novu MySQL vezu:
+
+| Postavka | Vrijednost |
+| --- | --- |
+| Host | `127.0.0.1` |
+| Port | `3307` (ili vrijednost `DB_FORWARD_PORT`) |
+| Database | `autodnevnik` (ili `DB_DATABASE`) |
+| Username | `autodnevnik` (ili `DB_USERNAME`) |
+| Password | Lokalna vrijednost `DB_PASSWORD` iz `.env`, ne root lozinka |
+| JDBC URL | `jdbc:mysql://127.0.0.1:3307/autodnevnik` |
+
+Pokrenuti Docker servise, zatim Test Connection i Finish. U stablu veze otvoriti `autodnevnik` → Tables; odabrati tablicu i prikaz Data za postojeće demo zapise. Pri prvom povezivanju klijent može tražiti preuzimanje MySQL JDBC drivera. Lozinku ne upisivati u dokumentaciju ili javni URL.
 
 Testovi baze koriste privremene zapise u transakciji i na kraju rade rollback, bez promjene demo zapisa (AUTO_INCREMENT može preskočiti testne brojeve). HTTP testovi provjeravaju lokalni Apache iz web kontejnera. Pozitivan health test zahtijeva instaliranu shemu i pokrenutu bazu. Rezultati i obuhvat opisani su u `docs/ARCHITECTURE.md`; uspjeh tih testova ne znači da su buduća autentifikacija i CRUD već implementirani.
 
 ## Početni podatkovni model
 Korisnik ima više vozila; vozilo ima servise, energiju, dodatne troškove i podsjetnike. Vijesti imaju autora, kategoriju i najviše jednu sliku. Količine goriva vode se u litrama, električna punjenja u kWh, a iznosi u eurima. Električna vozila u prvoj verziji prate energiju i troškove bez procjene kWh/100 km. Troškovi servisa i energije ne kopiraju se u dodatne troškove.
 
-Potpuna početna shema je u `database/schema.sql`, a [ER dijagram i pravila](docs/ARCHITECTURE.md#er-dijagram-početne-sheme) u arhitekturi. Naredbe `bin/` namijenjene su CLI-ju, ne web pristupu. Za pokretanje na drugom računalu slijediti gornje korake; .env i lokalne lozinke ne prenose se kroz Git.
+Potpuna početna shema je u `database/schema.sql`. ER dijagram je zasebna [PNG slika](docs/er-diagram.png) ili [SVG slika](docs/er-diagram.svg); [pravila modela](docs/ARCHITECTURE.md#er-dijagram-početne-sheme) ostaju u arhitekturi. Naredbe `bin/` namijenjene su CLI-ju, ne web pristupu. Za pokretanje na drugom računalu slijediti gornje korake; .env i lokalne lozinke ne prenose se kroz Git.
 
 ## Svakodnevni rad
 ```powershell

@@ -1,0 +1,78 @@
+erDiagram
+    roles ||--o{ users : dodjeljuje
+    users ||--o{ vehicles : posjeduje
+    users ||--o{ articles : autor
+    categories ||--o{ articles : razvrstava
+    articles ||--o| article_images : slika
+    vehicles ||--o{ service_entries : servisi
+    vehicles ||--o{ energy_entries : energija
+    vehicles ||--o{ expenses : troskovi
+    vehicles ||--o{ reminders : podsjetnici
+    roles {
+        tinyint id PK
+        varchar code UK
+    }
+    users {
+        bigint id PK
+        tinyint role_id FK
+        varchar email UK
+        boolean is_active
+    }
+    categories {
+        bigint id PK
+        varchar name UK
+    }
+    articles {
+        bigint id PK
+        bigint author_id FK
+        bigint category_id FK
+        varchar status
+        datetime published_at
+    }
+    article_images {
+        bigint id PK
+        bigint article_id FK, UK
+        varchar storage_path UK
+    }
+    vehicles {
+        bigint id PK
+        bigint owner_id FK
+        varchar energy_type
+        int initial_odometer_km
+        varchar vin
+    }
+    service_entries {
+        bigint id PK
+        bigint vehicle_id FK
+        date occurred_on
+        int odometer_km
+        decimal amount_eur
+    }
+    energy_entries {
+        bigint id PK
+        bigint vehicle_id FK
+        varchar energy_type FK
+        date occurred_on
+        int odometer_km
+        decimal quantity
+        decimal amount_eur
+        boolean is_full_tank
+    }
+    expenses {
+        bigint id PK
+        bigint vehicle_id FK
+        varchar category
+        decimal amount_eur
+    }
+    reminders {
+        bigint id PK
+        bigint vehicle_id FK
+        date due_on
+        int due_odometer_km
+        datetime completed_at
+    }
+    schema_versions {
+        varchar version PK
+        char checksum
+        datetime applied_at
+    }
