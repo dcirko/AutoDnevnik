@@ -17,12 +17,12 @@ Planirane funkcionalnosti su registracija i prijava, vozila, servisne evidencije
 Za prvu cjelovitu verziju razvijamo jednostavne obrasce, popise i preglede te podsjetnike unutar aplikacije. Slanje e-mailom, napredna analitika i druge nadogradnje nisu uključeni. Ne uvodimo dodatne servise ni složenu infrastrukturu bez potrebe.
 
 ## Tehnološki okvir
-- PHP 8.4 backend bez frameworka, MySQL 8.4 i PDO.
-- HTML, CSS i JavaScript frontend.
+- Laravel 13 backend na PHP-u 8.4, MySQL 8.4; Laravelov pristup bazi koristi PDO.
+- Angular i TypeScript frontend u `frontend/`, uz HTML predloške i CSS.
 - Vlastiti REST API koji frontend stvarno koristi; JSON kao primarni format razmjene.
 - Git i kontinuirani razvoj na GitHubu.
 - Docker Compose: PHP/Apache i Composer u web kontejneru, MySQL u zasebnom kontejneru.
-- PHP sesije i CSRF zaštita; frontend i API na istom porijeklu.
+- Laravelove sesije i CSRF zaštita; cilj je isto porijeklo za frontend i API. Razvojni Angular poslužitelj koristit će proxy prema PHP API-ju pri povezivanju funkcionalnosti. Autentifikacija još nije implementirana.
 - Za prijedlog projekta odabran je NHTSA vPIC VIN API, uz ručni unos i jasno ograničenu pokrivenost.
 
 ## Kako koristimo dokumentaciju
@@ -36,6 +36,8 @@ Prije veće odluke ili izmjene prvo pročitati ovaj dokument i `REQUIREMENTS.md`
 Kod promjene opsega, arhitekture ili plana ažurirati odgovarajuće dokumente u istoj promjeni. Zadatak označiti dovršenim tek kad rezultat postoji i provjeren je. Nove dokumente `API.md`, `DATABASE.md` i `TESTING.md` izdvojiti tek kada sadržaj preraste postojeće dokumente.
 
 ## Trenutačno stanje
+Korisnik je 2026-10-25 odabrao prijelaz na Laravel uz zadržavanje Angulara, Apachea, MySQL-a i Dockera. Codex piše većinu koda i uz funkcionalnosti objašnjava tijek zahtjeva, odgovornosti datoteka i provjere. Nastavnikovo odobrenje frameworka nije potvrđeno; to ostaje otvorena obaveza iz uputa kolegija. Rezultati migracije evidentiraju se u `TASKS.md`.
+
 Dana 2026-10-19 pregledane su izvorne upute `upute.txt`, kratke upute za predaju `upute 2.txt` i korisnikov PDF `Uvodno predavanje.pdf`. Zahtjevi i faze rada usklađeni su s tim izvorima. Izvorne datoteke služe kao dokaz zahtjeva; tehnički prijedlozi postaju odluke tek nakon dogovora.
 
 Korisnik radi samostalno i potvrdio je da je tema AutoDnevnik odobrena. Prihvaćen je opseg vozila, servisa, goriva/kilometraže, troškova, jednostavnog dashboarda i podsjetnika unutar aplikacije. E-mail podsjetnici nisu dio prve verzije. Obavezni javni sadržaj, CMS, administracija, vlastiti API i vanjski servis ostaju prioritet.
@@ -52,7 +54,7 @@ Plan prati profesorovih 15 tjedana u `TASKS.md`. Korisnik je 2026-10-24 potvrdio
 - **Cilj:** objediniti te podatke u jednostavnoj web aplikaciji s privatnim evidencijama vlasnika.
 - **Ciljani korisnici:** vlasnici jednog ili više vozila; urednici automobilskih sadržaja i administrator aplikacije.
 - **Planirane funkcionalnosti:** vozila, servisi, gorivo/kilometraža, dodatni troškovi, podsjetnici u aplikaciji, dashboard, javne vijesti/savjeti, CMS i administracija korisnika/uloga.
-- **Tehnologije:** PHP 8.4 bez frameworka, PDO, MySQL 8.4, Apache, HTML/CSS/JavaScript, JSON REST API, PHP sesije, Composer i Docker Compose.
+- **Tehnologije:** PHP 8.4 i Laravel 13, MySQL 8.4, Apache, Angular/TypeScript, HTML/CSS, JSON REST API, Laravelove sesije, Composer i Docker Compose. Node.js i npm potrebni su za razvoj i izgradnju frontenda.
 - **Vanjski servis:** NHTSA vPIC za prijedlog marke, modela, modelne godine i dostupnih tehničkih podataka pri unosu VIN-a. Nepotpuna pokrivenost, posebno vozila koja nisu namijenjena američkom tržištu, ne smije blokirati ručni unos.
 - **Organizacija:** samostalan rad; kontinuirano verzioniranje na GitHub računu `dcirko`.
 - **Status:** pripremljen prijedlog u projektnoj dokumentaciji; ništa nije poslano profesoru ili LMS-u kroz ovaj rad. Tema aplikacije već je odobrena prema korisniku.

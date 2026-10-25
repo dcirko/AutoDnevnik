@@ -1,0 +1,41 @@
+name: Razvojni zadatak
+description: Mala razvojna cjelina s provjerljivim rezultatom
+title: "Zadatak: "
+body:
+  - type: textarea
+    id: cilj
+    attributes:
+      label: Cilj
+      description: Koji problem rješavamo i što korisnik treba moći napraviti?
+    validations:
+      required: true
+  - type: textarea
+    id: opseg
+    attributes:
+      label: Opseg i granice
+      description: Što ovaj zadatak uključuje, a što ostaje za zaseban zadatak?
+    validations:
+      required: true
+  - type: textarea
+    id: kriteriji
+    attributes:
+      label: Kriteriji prihvaćanja
+      description: Napiši provjerljive ishode, uključujući relevantne greške i ovlasti.
+      value: |
+        - [ ] Očekivani uspješan scenarij
+        - [ ] Nevaljan unos ili drugi relevantan neuspjeh
+        - [ ] Granice pristupa i vlasništva, ako se primjenjuju
+    validations:
+      required: true
+  - type: textarea
+    id: provjera
+    attributes:
+      label: Način provjere
+      description: Konkretni testovi, naredbe ili koraci u pregledniku i očekivani rezultati.
+    validations:
+      required: true
+  - type: textarea
+    id: kontekst
+    attributes:
+      label: Kontekst i otvorena pitanja
+      description: Poveznice na zahtjeve, odluke i povezane zadatke. Označi odluke koje tek treba donijeti.

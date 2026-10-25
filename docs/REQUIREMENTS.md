@@ -21,6 +21,7 @@ Popis je 2026-10-19 uspoređen s `docs/upute.txt` (detaljni zahtjevi, odjeljci 1
 - [ ] Testovi i evidentirani rezultati provjere.
 
 ## Zahtjevi AutoDnevnika
+- [x] Odabran Angular/TypeScript i izrađen početni projekt u `frontend/`; poslovno sučelje i API integracija još nisu implementirani.
 - [ ] Registracija, prijava i odjava korisnika.
 - [ ] Dodavanje, pregled, uređivanje i brisanje vlastitih vozila.
 - [ ] Evidencija servisa po vozilu.
@@ -51,7 +52,8 @@ Popis je 2026-10-19 uspoređen s `docs/upute.txt` (detaljni zahtjevi, odjeljci 1
 ## Potrebno razjasniti
 - [x] Usporediti zahtjeve s dostavljenim izvornim uputama.
 - [x] Potvrditi obaveznost sheme: JSON Schema ili XSD za barem jedan unos; zbog odabranog JSON-a koristimo JSON Schemu.
-- [x] Provjeriti uvjete PHP pristupa: vlastita struktura dopuštena; framework samo uz dogovor s nastavnikom. U fazi 1 odabran pristup bez frameworka.
+- [x] Provjeriti uvjete PHP pristupa: vlastita struktura dopuštena; framework samo uz dogovor s nastavnikom. Korisnik je 2026-10-25 odabrao Laravel umjesto ranijeg pristupa bez frameworka.
+- [ ] Potvrditi nastavnikovo odobrenje korištenja Laravela; korisnikov odabir ne predstavlja tu potvrdu.
 - [ ] Potvrditi okruženje izvođenja i zahtjeve završne predaje.
 - [x] Potvrditi okvirni rok: kraj semestra prema korisniku 2026-10-24.
 - [ ] Provjeriti točan LMS datum i status formalne prijave; tema aplikacije je prema korisniku odobrena, radi samostalno.

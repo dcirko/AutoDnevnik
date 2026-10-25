@@ -1,11 +1,11 @@
 # Arhitektura
 
 ## Status
-U fazi 2 izrađeni su početna shema baze, demonstracijski podaci i PHP ulazna točka s provjerom pristupa bazi. Poslovne odluke potvrđene su 2026-10-24 i evidentirane u `DECISIONS.md`. Korisnički računi, javne vijesti i privatni CRUD još nisu implementirani kroz sučelje/API.
+U fazi 2 izrađeni su početna shema baze, demonstracijski podaci i PHP ulazna točka s provjerom pristupa bazi. Korisnik je 2026-10-25 odabrao Laravel 13 umjesto vlastitog PHP usmjeravanja (D-020). Poslovne odluke potvrđene su 2026-10-24 i evidentirane u `DECISIONS.md`. Korisnički računi, javne vijesti i privatni CRUD još nisu implementirani kroz sučelje/API. Nastavnikovo odobrenje frameworka još nije potvrđeno.
 
 ## Potvrđeni okvir
-- PHP 8.4 bez frameworka, MySQL 8.4, PDO; Docker Compose s PHP/Apache web servisom i bazom.
-- HTML/CSS/JavaScript frontend koji koristi vlastiti REST API.
+- PHP 8.4 i Laravel 13, MySQL 8.4; Docker Compose s PHP/Apache web servisom i bazom. Laravelov DB sloj koristi PDO.
+- Angular/TypeScript frontend u `frontend/`, uz HTML predloške i CSS, koji će koristiti vlastiti REST API.
 - JSON kao primarni format razmjene.
 - Uloge posjetitelja, korisnika, urednika i administratora.
 - CMS za automobilske vijesti i savjete.
@@ -14,32 +14,40 @@ U fazi 2 izrađeni su početna shema baze, demonstracijski podaci i PHP ulazna t
 ## Predloženi tok podataka
 Preglednik šalje HTTP zahtjeve vlastitom PHP API-ju. Backend provjerava ulaze, prijavu, ulogu i vlasništvo, izvršava poslovna pravila i pristupa bazi kroz pripremljene SQL upite. Frontend obrađuje JSON odgovore i prikazuje rezultat.
 
-Odabrano je isto porijeklo za frontend i API te autentifikacija PHP sesijom s CSRF zaštitom promjena. Detaljne postavke provjeriti uz implementaciju. Lokalno koristimo HTTP isključivo na loopback adresi; javna instalacija zahtijeva HTTPS i Secure sesijski kolačić.
+Odabrano je isto porijeklo za frontend i API te autentifikacija Laravelovom sesijom s CSRF zaštitom promjena. Detaljne postavke i SPA integraciju provjeriti uz implementaciju računa; postojanje frameworka ne znači da je autentifikacija gotova. Lokalno koristimo HTTP isključivo na loopback adresi; javna instalacija zahtijeva HTTPS i Secure sesijski kolačić.
 
-## Predložena struktura projekta
+## Struktura projekta
 ```text
 docs/           projektna dokumentacija
-public/         javna ulazna točka i frontend resursi
-src/            PHP obrada zahtjeva, poslovna logika i pristup podacima
-config/         konfiguracija bez verzioniranih tajni
-database/       verzionirana shema/migracije i razvojni početni podaci
-tests/          testovi
-bin/            CLI instalacija i demo unos
-templates/      HTML prikaz odvojen od obrade
-docker/         razvojna konfiguracija
+backend/        zaseban PHP/Composer projekt
+  public/       Laravelova javna PHP ulazna točka
+  app/          kontroleri i buduća poslovna logika/modeli
+  bootstrap/    priprema Laravela i lokalni cache
+  routes/       Laravelove API rute
+  config/       konfiguracija bez verzioniranih tajni
+  database/     shema/migracije i razvojni početni podaci
+  tests/        backend testovi
+  bin/          pomoćna provjera PHP sintakse
+  artisan       Laravel CLI za migracije, demo unos i razvojne naredbe
+  docker/       PHP/Apache konfiguracija i Dockerfile
+frontend/       Angular/TypeScript SPA, zaseban npm projekt
+compose.yaml    zajedničko pokretanje backenda i baze
 ```
-`public/index.php` usmjerava početne zahtjeve, `src/Database/Connection.php` otvara PDO vezu, a `src/Http/Response.php` oblikuje JSON odgovore. `config/app.php` čita varijable procesa, `src/bootstrap.php` učitava Composer autoload i konfiguraciju. HTML je u `templates/`. Poslovne obrade izdvajat ćemo uz pojedine funkcionalnosti, bez generičkog vlastitog frameworka.
+`backend/public/index.php` učitava Composer i Laravel te predaje zahtjev frameworku. `backend/bootstrap/app.php` registrira API prefiks `/api/v1`, JSON opis servisa na `/` i dogovoreni oblik grešaka bez internih detalja. `backend/routes/api.php` povezuje health rutu s `app/Http/Controllers/HealthController.php`. Kontroler prima Laravelovu DB vezu kroz dependency injection i provjerava čitanje tablice uloga. `config/database.php` definira MySQL vezu i UTC. `artisan` je CLI ulazna točka. `src/` i tehnički PHP predložak više se ne koriste; korisničko sučelje ostaje Angular u `frontend/`.
+
+Laravel 13 instalira se Composerom (MIT licenca, točna verzija u lockfileu). PHPUnit provjerava odgovore i greške; postojeći transakcijski DB i stvarni HTTP testovi ostaju. Kod novih funkcionalnosti koristiti Laravelovu validaciju/autorizaciju i prilagoditi JSON greške prema stvarnom API ugovoru, bez gradnje paralelnog frameworka. Eloquent modeli i autentifikacija još nisu implementirani.
 
 ## Lokalno okruženje — faza 1
-- `compose.yaml`: servis `web` gradi se iz `docker/php/Dockerfile`, servis `db` koristi službenu sliku `mysql:8.4`.
-- Web koristi `php:8.4-apache`, Composer 2 i dodanu ekstenziju `pdo_mysql`. Slike su vezane uz verzijsku granu; točne dobivene zakrpe evidentirati nakon pokretanja.
-- Samo `public/` poslužuje se pregledniku, na `127.0.0.1:8080`. Pristup popisu datoteka je isključen. Apache `FallbackResource /index.php` šalje nepostojeće putanje PHP usmjeravanju; stvarne javne resurse poslužuje normalno.
+- `compose.yaml`: servis `web` gradi se iz `backend/docker/php/Dockerfile`, servis `db` koristi službenu sliku `mysql:8.4`.
+- Build kontekst je `./backend`, a samo `./backend` montira se u `/var/www/html`; frontend i dokumentacija nisu dio backend kontejnera. Putanje unutar kontejnera ostaju relativne backend korijenu.
+- Web koristi `php:8.4-apache`, Composer 2, dodanu ekstenziju `pdo_mysql` i `unzip` za instalaciju Composer paketa. Razvojni formatter `php-cs-fixer/shim` koristi PSR-12; nije runtime ovisnost aplikacije. Slike su vezane uz verzijsku granu; točne dobivene zakrpe evidentirati nakon pokretanja.
+- Samo `backend/public/` poslužuje se pregledniku, na `127.0.0.1:8080`. Pristup popisu datoteka je isključen. Apache `FallbackResource /index.php` šalje nepostojeće putanje PHP usmjeravanju; stvarne javne resurse poslužuje normalno.
 - Za lokalni pregled u DBeaveru baza je dostupna na `127.0.0.1:3307` (podesivo kroz `DB_FORWARD_PORT`). Port nije vezan na javna mrežna sučelja. Unutar Dockera aplikacija i dalje koristi `db:3306`. Podaci su u trajnom volumenu `db-data`; koristi se zaseban DB račun, ne root.
-- `.env` ostaje lokalno, `.env.example` sadrži primjer bez stvarnih lozinki. Compose prosljeđuje varijable procesu; PHP će ih čitati kroz `getenv()`, pa zasebna dotenv biblioteka zasad nije potrebna.
+- Korijenski `.env` ostaje lokalna Compose konfiguracija; Compose prosljeđuje DB varijable procesu. Laravel ih čita kroz `env()` u konfiguraciji. Lokalni `backend/.env` sadrži `APP_KEY`, generiran jednom kroz Artisan; oba primjera `.env.example` nemaju tajne. Laravel učitava svoju dotenv podršku; ključ se ne ispisuje ni verzionira.
 - PHP/Composer/MySQL ne instaliraju se posebno na Windows; radi se kroz Docker naredbe iz README-a.
 
 ## Baza i vlasništvo
-Izvor stvarne sheme je `database/schema.sql`: deset aplikacijskih tablica i tehnička tablica `schema_versions`. Koristimo MySQL 8.4/InnoDB, UTF-8 (`utf8mb4`), primarne/strane ključeve, jedinstvene indekse i CHECK ograničenja. Svaki korisnik ima jednu ulogu, vozilo jednog vlasnika, a svaka privatna evidencija jedno vozilo. Posjetitelj nije zapis u tablici uloga.
+Izvor stvarne sheme je `backend/database/schema.sql`: deset aplikacijskih tablica i tehnička tablica `schema_versions`. Koristimo MySQL 8.4/InnoDB, UTF-8 (`utf8mb4`), primarne/strane ključeve, jedinstvene indekse i CHECK ograničenja. Svaki korisnik ima jednu ulogu, vozilo jednog vlasnika, a svaka privatna evidencija jedno vozilo. Posjetitelj nije zapis u tablici uloga.
 
 ### Tablice i važna polja
 | Tablica | Namjena i obavezni podaci |
@@ -55,6 +63,7 @@ Izvor stvarne sheme je `database/schema.sql`: deset aplikacijskih tablica i tehn
 | `expenses` | Vozilo, datum, kategorija dodatnog troška, opis i iznos EUR; kilometraža opcionalna |
 | `reminders` | Vozilo, naslov i datum i/ili kilometarski prag; vrijeme dovršetka i napomena opcionalni |
 | `schema_versions` | Verzija početne sheme, SHA-256 kontrolni zbroj i vrijeme primjene; nije poslovni entitet |
+| `migrations` | Laravelova evidencija izvršenih migracija, dodana pri prijelazu na framework; nije dio izvorne poslovne sheme |
 
 Novac je `DECIMAL(12,2)`, količina `DECIMAL(12,3)`, kilometraža nenegativan cijeli broj. Ne pohranjujemo izračunate ukupne troškove, prosječnu potrošnju ni dupliciranu trenutačnu kilometražu. VIN nije obavezan; kada postoji, mora imati 17 znakova i jedinstven je unutar vlasnikovih vozila. Stroža provjera VIN znakova i dinamička granica godine slijede uz API validaciju.
 
@@ -80,11 +89,13 @@ Slike prikazuju sva polja početne SQL sheme. Mermaid datoteka zadržava sažeti
 - CASCADE nije autorizacija: vlasništvo se mora provjeriti na backendu prije svih privatnih radnji, što slijedi uz račune i CRUD.
 
 ### Instalacija i demo podaci
-`bin/database-install.php` primjenjuje poznatu početnu SQL datoteku samo na praznu bazu. Kontrolni zbroj i popis očekivanih tablica omogućuju sigurno ponovno pokretanje bez promjena. Ako shema ne odgovara ili je instalacija djelomična, skripta odbija nastaviti; nema automatskog DROP-a/resetiranja. MySQL DDL nema rollback cijele instalacije. Nakon objavljivanja ove verzije promjene sheme uvoditi novom migracijom, ne prepisivati primijenjenu shemu.
+`composer db:install` pokreće Laravelov `artisan migrate`. Početna migracija `2026_10_25_000000_adopt_initial_schema` na praznoj bazi primjenjuje postojeći `database/schema.sql`; već instaliranu shemu prepoznaje po `schema_versions` checksumu i očekivanim tablicama. Laravel dodaje tehničku tablicu `migrations`, bez izmjene aplikacijskih zapisa. Ako shema ne odgovara ili je instalacija djelomična, migracija odbija nastaviti; nema automatskog DROP-a/resetiranja. Početni `down()` odbija brisanje preuzete sheme. MySQL DDL nema rollback cijele instalacije. Daljnje promjene uvoditi novim migracijama, ne prepisivati SQL s već primijenjenim checksumom.
 
-`bin/database-seed.php` dopušten je samo uz `APP_ENV=local`; unosi izmišljene podatke u transakciji, bez prepisivanja postojećih korisnika. Sadrži 5 računa (dva vlasnika, urednik, admin, neaktivan korisnik), 3 kategorije, 4 vijesti (3 objavljene, 1 nacrt), 3 vozila (benzin, električno, dizel), 2 servisa, 6 točenja/punjenja, 2 dodatna troška i 4 podsjetnika. Slike će dobiti stvarne demo datoteke uz CMS u fazi 4; trenutačno su njihova ograničenja provjerena testnim metapodacima.
+`composer db:seed` pokreće Laravelov `artisan db:seed` i `database/seeders/DatabaseSeeder.php`. Dopušten je samo uz `APP_ENV=local`; unosi izmišljene podatke u transakciji, bez prepisivanja postojećih korisnika. Sadrži 5 računa (dva vlasnika, urednik, admin, neaktivan korisnik), 3 kategorije, 4 vijesti (3 objavljene, 1 nacrt), 3 vozila (benzin, električno, dizel), 2 servisa, 6 točenja/punjenja, 2 dodatna troška i 4 podsjetnika. Slike će dobiti stvarne demo datoteke uz CMS u fazi 4; trenutačno su njihova ograničenja provjerena testnim metapodacima.
 
-Svaki demo račun dobiva nasumičnu lozinku, u bazu se sprema hash. Lokalni pristupni podaci su isključivo u `storage/demo-accounts.json`, izvan javnog direktorija i Gita. Te račune još nije moguće prijaviti jer autentifikacija dolazi u fazi 3.
+Svaki demo račun dobiva nasumičnu lozinku, u bazu se sprema hash. Lokalni pristupni podaci su isključivo u `backend/storage/demo-accounts.json`, izvan javnog direktorija i Gita. Te račune još nije moguće prijaviti jer autentifikacija dolazi u fazi 3.
+
+Laravelov cache i sesije zasad koriste datoteke, bez dodatnih tablica ili Redisa. Automatsko posluživanje lokalnog storage diska isključeno je; `storage/` nije javni direktorij. SQL datoteka ostaje bajtno nepromijenjena zbog primijenjenog checksuma, pa njezina početna napomena o staroj instalacijskoj skripti ostaje povijesna; aktualna instalacija ide kroz migraciju.
 
 ## Uloge i pristup
 | Uloga | Predviđeni pristup |
@@ -121,9 +132,9 @@ Korisnik je 2026-10-24 potvrdio električna vozila, model troškova/podsjetnika,
 
 | Tema | Prijedlog za prvu verziju |
 | --- | --- |
-| PHP | Odabrano: vlastita struktura bez frameworka i PDO; biblioteke za sanitizaciju i JSON Schema validaciju odabrati uz implementaciju |
-| Frontend | HTML/CSS i obični JavaScript s fetch pozivima API-ju; jedna aplikacija i isto porijeklo |
-| Autentifikacija | Odabrano: PHP sesija i CSRF token |
+| PHP | Odabrano: Laravel 13 na PHP-u 8.4; biblioteke za sanitizaciju i JSON Schema validaciju odabrati uz implementaciju |
+| Frontend | Angular 22 i TypeScript, standalone komponente, Router, HTML/CSS; komunikacija s PHP REST API-jem slijedi uz funkcionalnosti |
+| Autentifikacija | Odabrano: Laravelova sesija i CSRF zaštita; SPA povezivanje i pravila implementirati u fazi 3 |
 | Baza/okruženje | Odabrano: MySQL 8.4, PHP 8.4/Apache i Composer 2 kroz Docker Compose |
 | Uloge | Korisnik, urednik, administrator; urednik/admin imaju i mogućnosti običnog korisnika nad vlastitim vozilima, bez pristupa tuđima |
 | Vijesti | Jedna kategorija i jedna opcionalna slika; nacrt/objavljeno, uz vrijeme objave; povlačenje vraća u nacrt |
@@ -141,21 +152,22 @@ Korisnik je 2026-10-24 potvrdio električna vozila, model troškova/podsjetnika,
 
 Električna vozila uključena su, LPG i hibridna vozila nisu dio početnog modela. Jedinica količine izvodi se iz vrste energije (`electricity` znači kWh, ostalo litre); količine različitih jedinica ne zbrajaju se. Trenutačna kilometraža bit će maksimum početne i zabilježene kilometraže iz evidencija; podsjetnik nije očitanje kilometraže. Provjeru vremenskog redoslijeda/ispravaka povijesnih očitanja i prag "uskoro" razraditi uz CRUD i dashboard. Međutablična i vremenska pravila ne može zamijeniti CHECK pojedinog retka.
 
-### Početne rute — provedeno u fazi 2
+### Početne rute — nakon prijelaza na Laravel
 | Metoda / putanja | Odgovor |
 | --- | --- |
-| `GET /` | 200, HTML tehnička početna stranica |
+| `GET /` | 200, JSON `{"data":{"name":"AutoDnevnik API"}}`; Angular je zasebno na portu 4200 |
 | `GET /api/v1/health` | 200 i `{"data":{"status":"ok"}}` ako PDO može pročitati tablicu uloga |
 | Nedostupna baza na health ruti | 503 i `{"error":{"code":"service_unavailable","message":"Usluga trenutačno nije dostupna."}}` |
-| Druga metoda poznate rute | 405, JSON greška `method_not_allowed`, `Allow: GET` |
+| `HEAD` poznate rute | 200 bez tijela; standardno Laravelovo mapiranje uz `GET` |
+| Druga metoda poznate rute | 405, JSON greška `method_not_allowed`, `Allow: GET, HEAD` |
 | Nepoznata putanja | 404, JSON greška `not_found` |
 
 Ovo je samo tehnički temelj API-ja. Rute vijesti i vozila, prijava, autorizacija, validacija unosa i JSON Schema nisu gotove ovom fazom. JSON tijela ne izlažu konfiguraciju, verzije, tablice ni PDO detalje; detalji nastale greške u ovoj fazi svode se na klasu iznimke u internom logu.
 
 ### Provjere faze 2
 - Instalacija sheme prvo provjerena u novoj izoliranoj bazi, zatim primijenjena na razvojnu bazu. Privremena baza i njezine dodijeljene ovlasti uklonjene su nakon provjera.
-- `tests/database.php`: 20 provjera ograničenja, decimalnog zbrajanja i brisanja. Testni podaci uvijek se vraćaju rollbackom; InnoDB AUTO_INCREMENT brojači mogu preskočiti iskorištene testne brojeve.
-- `tests/http.php`: 8 provjera stvarnih HTTP odgovora, JSON oblika, Allow zaglavlja i nedostupnosti privatnih putanja. Pokretanje unutar web kontejnera; `TEST_BASE_URL` može promijeniti osnovnu adresu.
+- `backend/tests/database.php`: 20 provjera ograničenja, decimalnog zbrajanja i brisanja. Testni podaci uvijek se vraćaju rollbackom; InnoDB AUTO_INCREMENT brojači mogu preskočiti iskorištene testne brojeve.
+- `backend/tests/http.php`: 8 provjera stvarnih HTTP odgovora, JSON oblika, Allow zaglavlja i nedostupnosti privatnih putanja. Pokretanje unutar web kontejnera; `TEST_BASE_URL` može promijeniti osnovnu adresu.
 - Posebno provjereno privremeno zaustavljanje projektne baze: health vraća 503 bez internih detalja, nakon pokretanja ponovno 200.
 - PHP sintaksa i Apache konfiguracija provjereni. Instalacija i demo unos ponovno pokrenuti bez dupliciranja/prepisivanja podataka.
 

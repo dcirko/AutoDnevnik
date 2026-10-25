@@ -1,0 +1,72 @@
+name: Provjere
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  frontend:
+    name: Frontend
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v6
+        with:
+          node-version-file: frontend/package.json
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - run: npm ci
+      - run: npm run format:check
+      - run: npm run build
+
+  backend:
+    name: Backend
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      COMPOSE_PROJECT_NAME: autodnevnik-ci
+      APP_ENV: test
+      DB_DATABASE: autodnevnik_test
+      DB_USERNAME: autodnevnik_test
+      DB_PASSWORD: ci-only-app-password
+      MYSQL_ROOT_PASSWORD: ci-only-root-password
+    steps:
+      - uses: actions/checkout@v4
+      - name: Pokreni okruženje
+        run: docker compose up -d --build --wait --wait-timeout 180
+      - name: Instaliraj ovisnosti
+        run: docker compose exec -T web composer install --no-interaction --prefer-dist --no-progress
+      - name: Provjeri Composer konfiguraciju
+        run: docker compose exec -T web composer validate --no-check-publish
+      - name: Pripremi Laravel ključ
+        run: |
+          cp backend/.env.example backend/.env
+          docker compose exec -T web php artisan key:generate --no-interaction
+      - name: Provjeri PHP sintaksu
+        run: docker compose exec -T web composer lint
+      - name: Provjeri formatiranje
+        run: docker compose exec -T web composer format:check
+      - name: Instaliraj testnu shemu
+        run: docker compose exec -T web composer db:install
+      - name: Pričekaj HTTP poslužitelj
+        run: curl --fail --silent --show-error --retry 10 --retry-connrefused --retry-delay 2 http://localhost:8080/api/v1/health
+      - name: Pokreni testove baze i HTTP-a
+        run: docker compose exec -T web composer test
+      - name: Prikaži dijagnostiku kod neuspjeha
+        if: failure()
+        run: docker compose logs --no-color --tail 100
+      - name: Zaustavi okruženje
+        if: always()
+        run: docker compose down

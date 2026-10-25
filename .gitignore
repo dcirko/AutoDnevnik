@@ -7,13 +7,20 @@
 
 # Dependencies and generated files
 /vendor/
+/backend/vendor/
+/backend/storage/
 /node_modules/
+/frontend/node_modules/
+/frontend/dist/
+/frontend/.angular/
 /.tools/
 /tmp/
 /output/
 /storage/
 *.log
 .phpunit.cache/
+/backend/.php-cs-fixer.cache
+/backend/.phpunit.cache/
 
 # Local editor/OS settings
 /.idea/

@@ -62,6 +62,7 @@ Ovo su zahtjevi dostavljenih izvora, a ne novi korisnikovi tehnički odabiri:
 - **Odluka:** PHP 8.4 bez frameworka, PDO i MySQL 8.4, HTML/CSS/obični JavaScript, PHP sesije i CSRF zaštita. Docker Compose s dva servisa: PHP/Apache s Composerom 2 i MySQL s trajnim volumenom.
 - **Razlog:** prati tehnologije kolegija i izbjegava zasebne instalacije PHP-a, Apachea i baze na Windowsu. Vlastita PHP struktura izričito je dopuštena u uputama.
 - **Granica:** razvojno okruženje, ne gotova javna instalacija. Shema i aplikacijska logika dolaze u sljedećim fazama. Rezultat pokretanja vodi se u `TASKS.md`.
+- **Kasnija izmjena:** D-017 zamjenjuje odabir običnog JavaScripta Angularom i TypeScriptom; ostali odabiri ostaju.
 
 ## D-009 — NHTSA vPIC za početnu VIN integraciju
 - **Datum:** 2026-10-20
@@ -115,3 +116,36 @@ Ovo su zahtjevi dostavljenih izvora, a ne novi korisnikovi tehnički odabiri:
 - **Odluka:** MySQL je lokalnom klijentu dostupan na `127.0.0.1:3307`, uz postojeći aplikacijski račun. PHP u Dockeru i dalje koristi `db:3306`. DBeaver je već instaliran na računalu; SQL Server/SSMS ne uvodimo u tehnološki paket.
 - **Dijagram:** PNG i SVG datoteke odvojene su od Markdowna, uz zaseban Mermaid pregled glavnih ključeva. Dokumenti sadrže poveznice na te datoteke.
 - **Provjera:** lokalni port prihvaća MySQL protokol; trajni volumen i postojeći podaci sačuvani su pri ponovnom stvaranju DB kontejnera.
+
+## D-017 — Angular i TypeScript frontend
+- **Datum:** 2026-10-25
+- **Status:** izričito odabrano korisnikovom porukom
+- **Odluka:** frontend razvijati kao Angular 22/TypeScript SPA u `frontend/`, uz HTML predloške i CSS. Ovaj odabir zamjenjuje obični JavaScript iz D-003/D-008. PHP 8.4 bez frameworka, MySQL, sesije, CSRF i JSON REST API ostaju.
+- **Razlog:** komponentna organizacija obrazaca, popisa, dashboarda i CMS-a te korisnikova želja za Angularom.
+- **Okruženje:** Node.js 24 LTS i npm za razvoj/build; Angular CLI je lokalna ovisnost. PHP i baza i dalje rade u Dockeru. Cilj je isto porijeklo; razvojni proxy i posluživanje produkcijskog builda povezati uz funkcionalnosti.
+- **Granica ove promjene:** samo početni minimalni projekt, prazne rute i dokumentacija. Bez poslovnih stranica, API integracije, UI biblioteke i autentifikacije.
+
+## D-018 — Odvojeni backend i frontend
+- **Datum:** 2026-10-25
+- **Status:** prema izričitom korisnikovu zahtjevu
+- **Odluka:** PHP/Composer projekt, baza, backend testovi i Dockerfile nalaze se u `backend/`; Angular/npm projekt u ravnopravnom `frontend/`. Dokumentacija, Compose i lokalni `.env` ostaju u korijenu repozitorija.
+- **Okruženje:** Docker build kontekst i web bind mount ograničeni su na `backend/`. Interna putanja `/var/www/html`, nazivi servisa, portovi i trajni volumen baze ostaju isti.
+
+## D-019 — Automatske provjere, formatteri i mali zadaci
+- **Datum:** 2026-10-25
+- **Status:** korisnik prihvatio sva tri prijedloga iz razgovora o pravilima razvoja
+- **Odluka:** GitHub Actions provjerava frontend format/build te backend konfiguraciju, sintaksu, format i postojeće DB/HTTP testove. Prettier ostaje frontend formatter; backend koristi razvojni `php-cs-fixer/shim` i PSR-12 bez rizičnih pravila, uz zaključanu verziju u Composer lockfileu.
+- **Organizacija:** mali razvojni zadaci imaju cilj, opseg, kriterije prihvaćanja i način provjere. Predložak postoji u `TASKS.md` i GitHub Issues obrascu.
+- **Granice:** CI koristi zasebnu bazu na privremenom runneru. Frontend još nema funkcionalne testove. Obavezni statusi za merge nisu postavljeni, a konfiguracija se na GitHubu izvršava tek nakon slanja promjena.
+
+## D-020 — Laravel backend i objašnjenja uz implementaciju
+- **Datum:** 2026-10-25
+- **Status:** korisnik izričito odabrao Laravel i naložio prijelaz; nastavnikovo odobrenje frameworka još nije potvrđeno
+- **Odluka:** Laravel 13 (MIT) na postojećem PHP-u 8.4; zadržati Apache, MySQL 8.4, Docker Compose i odvojeni Angular frontend. Zamjenjuje odabir backenda bez frameworka iz D-008/D-015/D-017; uvjet kolegija iz D-004 ostaje otvoren.
+- **Razlog:** Codex piše većinu implementacije; standardna struktura, dokumentirane mogućnosti i gotovi infrastrukturni mehanizmi olakšavaju održavanje i usporedbu sa Spring Bootom.
+- **Rad s korisnikom:** uz funkcionalnosti objasniti tijek zahtjeva, ključne datoteke, poslovna pravila i stvarne provjere. Autor treba razumjeti i provjeriti predani kod.
+- **Baza:** zadržati izvornu SQL shemu i njezin checksum. Početna Laravel migracija prepoznaje postojeću shemu bez ponovnog kreiranja tablica; praznu bazu instalira iz istog SQL-a. Dodaje se Laravelova evidencija `migrations`. Početni `down()` odbija brisanje preuzetih tablica; daljnje izmjene provode se novim migracijama.
+- **Sučelje:** ukloniti tehnički PHP predložak; Laravel na `/` vraća JSON opis servisa, a Angular se razvija na portu 4200. Posluživanje Angular builda i razvojni proxy još nisu povezani.
+- **Konfiguracija:** korijenski `.env` ostaje Compose konfiguracija s DB vjerodajnicama. `backend/.env` sadrži lokalni Laravel `APP_KEY` i ne verzionira se. Ključ se generira jednom i ne mijenja pri svakom pokretanju. Laravel i DB veza koriste UTC, a prikaz lokalnog vremena ostaje Europe/Zagreb.
+- **Ovisnosti:** Composer lockfile bilježi Laravel i tranzitivne biblioteke; PHPUnit (BSD-3-Clause) dodan je za provjere odgovora i skrivanja internih grešaka. Postojeći DB i HTTP testovi ostaju.
+- **Izvori:** [Laravel 13 podrška i PHP kompatibilnost](https://laravel.com/framework/docs/releases), [deployment i preduvjeti](https://laravel.com/framework/docs/deployment), [migracije](https://laravel.com/framework/docs/migrations).

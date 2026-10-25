@@ -3,20 +3,23 @@ name: autodnevnik
 services:
   web:
     build:
-      context: .
+      context: ./backend
       dockerfile: docker/php/Dockerfile
     ports:
       - "127.0.0.1:${APP_PORT:-8080}:80"
     volumes:
-      - .:/var/www/html
+      - ./backend:/var/www/html
     environment:
+      APP_NAME: AutoDnevnik
       APP_ENV: ${APP_ENV:-local}
+      APP_DEBUG: "false"
       APP_URL: ${APP_URL:-http://localhost:8080}
       DB_HOST: db
       DB_PORT: "3306"
       DB_DATABASE: ${DB_DATABASE:-autodnevnik}
       DB_USERNAME: ${DB_USERNAME:-autodnevnik}
       DB_PASSWORD: ${DB_PASSWORD:?Set DB_PASSWORD in .env}
+      SESSION_DRIVER: file
       VIN_API_BASE_URL: ${VIN_API_BASE_URL:-https://vpic.nhtsa.dot.gov/api}
       VIN_API_TIMEOUT_SECONDS: ${VIN_API_TIMEOUT_SECONDS:-10}
     depends_on:
