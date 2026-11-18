@@ -1,22 +1,18 @@
-﻿# AutoDnevnik frontend
+# AutoDnevnik frontend
 
-Početni Angular 22/TypeScript projekt generiran Angular CLI-jem 22.2.4.
-Koristi strict TypeScript, standalone korijensku komponentu, CSS i prazne rute.
-Poslovne stranice, API integracija i autentifikacija još nisu implementirani.
+An initial Angular 22 and TypeScript project generated with Angular CLI 22.2.4. It uses strict TypeScript, a standalone root component, CSS, and an empty route configuration. Application pages, API integration, and authentication are planned.
 
-Potreban je Node.js 24 LTS, najmanje 24.15.0, i npm. Iz ovog direktorija:
+Install Node.js 24 LTS (24.15.0 or later) and npm. From this directory:
 
 ```powershell
 npm ci
 npm start
 ```
 
-Razvojni poslužitelj: `http://localhost:4200`.
+The development server is available at http://localhost:4200.
 
 ```powershell
 npm run build
 ```
 
-Produkcijski izlaz: `dist/autodnevnik/browser/`.
-PHP backend i MySQL pokreću se prema [glavnom README-u](../README.md).
-Proxy prema API-ju i Apache posluživanje builda dodaju se uz buduće funkcionalnosti.
+The production build is written to `dist/autodnevnik/browser/`. Start the PHP backend and MySQL by following the [main README](../README.md). The API proxy and Apache hosting for the production build are planned for a later phase.
